@@ -1,15 +1,16 @@
 package ru.mail.migus_nikta;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
-import ru.mail.migus_nikta.dao.EventDao;
-import ru.mail.migus_nikta.dao.UserDao;
-import ru.mail.migus_nikta.dao.impl.EventDaoImpl;
-import ru.mail.migus_nikta.dao.impl.UserDaoImpl;
+import ru.mail.migus_nikta.dao.SecondTestDao;
+import ru.mail.migus_nikta.dao.TestDao;
+import ru.mail.migus_nikta.dao.impl.SecondTestDaoImpl;
+import ru.mail.migus_nikta.dao.impl.TestDaoImpl;
 import ru.mail.migus_nikta.exception.BindingNotFoundException;
 import ru.mail.migus_nikta.exception.ConstructorNotFoundException;
 import ru.mail.migus_nikta.exception.TooManyConstructorsException;
@@ -26,18 +27,18 @@ public class AppTest {
     @Test
     public void testExistingBinding() {
         Injector injector = new InjectorImpl();
-        injector.bind(EventDao.class, EventDaoImpl.class);
-        Provider<EventDao> serviceProvider = injector.getProvider(EventDao.class);
+        injector.bind(SecondTestDao.class, SecondTestDaoImpl.class);
+        Provider<SecondTestDao> serviceProvider = injector.getProvider(SecondTestDao.class);
         assertNotNull(serviceProvider);
         assertNotNull(serviceProvider.getInstance());
-        assertSame(EventDaoImpl.class, serviceProvider.getInstance().getClass());
+        assertSame(SecondTestDaoImpl.class, serviceProvider.getInstance().getClass());
     }
 
     @Test
     public void testComplicatedBinding() {
         Injector injector = new InjectorImpl();
         injector.bind(EventService.class, EventServiceImpl.class);
-        injector.bind(EventDao.class, EventDaoImpl.class);
+        injector.bind(SecondTestDao.class, SecondTestDaoImpl.class);
         Provider<EventService> serviceProvider = injector.getProvider(EventService.class);
         assertNotNull(serviceProvider);
         assertNotNull(serviceProvider.getInstance());
@@ -55,7 +56,7 @@ public class AppTest {
     public void testSingletonBinding() {
         Injector injector = new InjectorImpl();
         injector.bindSingleton(EventService.class, EventServiceImpl.class);
-        injector.bind(EventDao.class, EventDaoImpl.class);
+        injector.bind(SecondTestDao.class, SecondTestDaoImpl.class);
         Provider<EventService> serviceProvider = injector.getProvider(EventService.class);
         serviceProvider.getInstance().setOperationsCount(2);
         Provider<EventService> serviceProvider2 = injector.getProvider(EventService.class);
@@ -79,8 +80,8 @@ public class AppTest {
     @Test(expected = ConstructorNotFoundException.class)
     public void testConstructorNotFoundExceptionInBinding() {
         Injector injector = new InjectorImpl();
-        injector.bind(UserDao.class, UserDaoImpl.class);
-        injector.getProvider(UserDao.class);
+        injector.bind(TestDao.class, TestDaoImpl.class);
+        injector.getProvider(TestDao.class);
     }
 
 }

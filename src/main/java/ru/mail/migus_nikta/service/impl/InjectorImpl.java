@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import ru.mail.migus_nikta.annotation.Inject;
@@ -23,11 +24,9 @@ public class InjectorImpl implements Injector {
     public <T> Provider<T> getProvider(Class<T> type) {
         @SuppressWarnings(value = "unchecked")
         T binding = (T) container.get(type);
-        if (binding == null) {
-            return null;
-        } else {
-            return new ProviderImpl<>(binding);
-        }
+        return Optional.ofNullable(binding)
+                .map(ProviderImpl::new)
+                .orElse(null);
     }
 
     @Override
@@ -39,29 +38,37 @@ public class InjectorImpl implements Injector {
         if (annotatedConstructor.size() > 1) {
             throw new TooManyConstructorsException();
         } else if (annotatedConstructor.size() == 0) {
-            try {
-                container.put(intf, impl.getDeclaredConstructor().newInstance());
-            } catch (NoSuchMethodException e) {
-                throw new ConstructorNotFoundException();
-            } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                e.printStackTrace();
-            }
+            tryToBindByDefaultConstructor(intf, impl);
         } else {
-            Object[] objects = Arrays.stream(annotatedConstructor.get(0).getParameterTypes()).map(o -> {
-                try {
-                    return o.getDeclaredConstructor().newInstance();
-                } catch (NoSuchMethodException e) {
-                    throw new BindingNotFoundException();
-                } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-                    e.printStackTrace();
-                }
-                return null;
-            }).toArray();
+            bindWhenOnlyOneAnnotatedConstructorExist(intf, annotatedConstructor);
+        }
+    }
+
+    private <T> void bindWhenOnlyOneAnnotatedConstructorExist(Class<T> intf, List<Constructor<?>> annotatedConstructor) {
+        Object[] objects = Arrays.stream(annotatedConstructor.get(0).getParameterTypes()).map(o -> {
             try {
-                container.put(intf, annotatedConstructor.get(0).newInstance(objects));
-            } catch (InstantiationException | InvocationTargetException | IllegalAccessException e) {
-                e.printStackTrace();
+                return o.getDeclaredConstructor().newInstance();
+            } catch (NoSuchMethodException e) {
+                throw new BindingNotFoundException();
+            } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+                System.out.println(e);
             }
+            return null;
+        }).toArray();
+        try {
+            container.put(intf, annotatedConstructor.get(0).newInstance(objects));
+        } catch (InstantiationException | InvocationTargetException | IllegalAccessException e) {
+            System.out.println(e);
+        }
+    }
+
+    private <T> void tryToBindByDefaultConstructor(Class<T> intf, Class<? extends T> impl) {
+        try {
+            container.put(intf, impl.getDeclaredConstructor().newInstance());
+        } catch (NoSuchMethodException e) {
+            throw new ConstructorNotFoundException();
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
+            System.out.println(e);
         }
     }
 

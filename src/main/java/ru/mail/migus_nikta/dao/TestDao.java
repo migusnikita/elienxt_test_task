@@ -1,4 +1,4 @@
 package ru.mail.migus_nikta.dao;
 
-public interface UserDao {
+public interface TestDao {
 }
